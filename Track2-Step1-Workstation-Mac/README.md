@@ -10,7 +10,7 @@ Viene copiato il playbook nella VM per fare poi l'esecuzione.
 
 Vengono concessi i permessi di root per fare le verifiche di creazione dei container. 
 
-**container.yml** playbook per l'installazione di Docker e l'avvio dei container per l'utilizzo di Jenkins, che avrà il compito di avviare una web-app che visualizzerà una stringa "Hello World".
+**container.yml** playbook per l'installazione di Docker e l'avvio dei container per l'utilizzo di Jenkins.
 
 ## AVVIO 
 
