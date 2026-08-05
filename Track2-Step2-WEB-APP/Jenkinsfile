@@ -44,7 +44,7 @@ pipeline {
                 script {
                     def containerId = sh(script: 'hostname', returnStdout: true).trim()
                     echo "Container ID agent: ${containerId}"
-                    sh "docker cp /home/vagrant/Dockerfile ${containerId}:/home/jenkins/agent/workspace/app/Track2-Step2-WEB-APP/Dockerfile"
+                    sh "docker cp /home/vagrant/Dockerfile ${containerId}:/home/jenkins/agent/workspace/app/Dockerfile"
                     echo "Dockerfile copiato con successo"
                 }
             }
