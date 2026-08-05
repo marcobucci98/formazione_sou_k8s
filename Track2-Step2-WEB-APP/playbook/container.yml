@@ -17,7 +17,7 @@
     jenkins_agent_name: "jenkins-agent"
     jenkins_agent_ip: "172.28.0.20"
     jenkins_agent_image: "jenkins/inbound-agent:latest"
-    jenkins_agent_secret: "3c9ee23e050ef4221c741c3bf2bfa3b4a4a0af2dfb196c6e910a5e249b29d74d"
+    jenkins_agent_secret: "*"
 
   tasks:
 
