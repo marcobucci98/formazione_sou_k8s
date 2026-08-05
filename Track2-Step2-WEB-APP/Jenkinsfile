@@ -9,7 +9,7 @@ pipeline {
         stage('Checkout & Setup Tag') {
             steps {
                 script {
-                    dir('Track2-Step2-WEB-APP') {
+                
                         def gitTag = sh(script: 'git tag --points-at HEAD', returnStdout: true).trim()
                         
                         def branchName = env.BRANCH_NAME ?: env.GIT_BRANCH?.replace('origin/', '')
@@ -34,7 +34,7 @@ pipeline {
                         echo "Branch: ${branchName}"
                         echo "Git Tag: ${gitTag ?: 'nessuno'}"
                         echo "Docker Image Tag: ${env.IMAGE_TAG}"
-                    }
+                
                 }
             }
         }
