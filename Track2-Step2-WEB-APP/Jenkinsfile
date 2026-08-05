@@ -31,7 +31,7 @@ pipeline {
                         }
 
                         env.IMAGE_TAG = tag
-                        echo "Branch rilevato: ${branchName}"
+                        echo "Branch: ${branchName}"
                         echo "Git Tag: ${gitTag ?: 'nessuno'}"
                         echo "Docker Image Tag: ${env.IMAGE_TAG}"
                     }
@@ -39,13 +39,15 @@ pipeline {
             }
         }
 
-        stage('Copia Dockerfile esterno') {
+        stage('Copia file dal nodo host') {
             steps {
                 script {
                     def containerId = sh(script: 'hostname', returnStdout: true).trim()
-                    echo "Container ID agent: ${containerId}"
-                    sh "docker cp /home/vagrant/Dockerfile ${containerId}:/home/jenkins/agent/workspace/app/Dockerfile"
-                    echo "Dockerfile copiato con successo"
+        
+                    sh "docker cp /home/vagrant/Dockerfile ${containerId}:${WORKSPACE}/Dockerfile"
+
+                    
+                    echo "File copiati in: ${WORKSPACE}"
                 }
             }
         }
@@ -53,7 +55,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                        sh "docker build -t ${env.DOCKER_IMAGE}:${env.IMAGE_TAG} ."
+                    // Build dal workspace root (dove sono stati copiati i file)
+                    sh "docker build -t ${env.DOCKER_IMAGE}:${env.IMAGE_TAG} ."
                 }
             }
         }
