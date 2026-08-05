@@ -43,7 +43,7 @@
           - python3-devel
         state: present
 
-    - name: Rimozione pacchetti RPM conflittuali
+    - name: Rimozione pacchetti RPM
       ansible.builtin.dnf:
         name:
           - python3-requests
@@ -57,7 +57,7 @@
           - setuptools
         state: latest
 
-    - name: Installazione librerie Python per Docker 
+    - name: Installazione librerie Python 
       ansible.builtin.pip:
         name:
           - "urllib3<2.0.0"
@@ -117,7 +117,7 @@
           - name: "{{ docker_network_name }}"
             ipv4_address: "{{ jenkins_master_ip }}"
 
-    - name: Recupero della password
+    - name: Recupero password
       ansible.builtin.command:
         cmd: docker exec {{ jenkins_master_name }} cat /var/jenkins_home/secrets/initialAdminPassword
       register: jenkins_admin_password
@@ -134,7 +134,7 @@
       when: jenkins_admin_password.rc == 0
 
     # JENKINS AGENT (MODIFICATO PER DOCKER OUT OF DOCKER)
-    - name: Avvio container Jenkins Agent
+    - name: Avvio Jenkins Agent
       community.docker.docker_container:
         name: "{{ jenkins_agent_name }}"
         image: "{{ jenkins_agent_image }}"
