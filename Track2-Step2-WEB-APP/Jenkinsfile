@@ -1,0 +1,82 @@
+pipeline {
+    agent { label 'jenkins-agent' }
+
+    environment {
+        DOCKER_IMAGE = 'marcobuccidev/flask-app-example-build'
+    }
+
+    stages {
+        stage('Checkout & Setup Tag') {
+            steps {
+                script {
+                    dir('Track2-Step2-WEB-APP') {
+                        def gitTag = sh(script: 'git tag --points-at HEAD', returnStdout: true).trim()
+                        
+                        def branchName = env.BRANCH_NAME ?: env.GIT_BRANCH?.replace('origin/', '')
+                        if (!branchName) {
+                            branchName = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
+                        }
+                        
+                        def shortCommit = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+
+                        def tag
+                        if (gitTag) {
+                            tag = gitTag
+                        } else if (branchName == 'main' || branchName == 'master') {
+                            tag = 'latest'
+                        } else if (branchName == 'develop') {
+                            tag = "develop-${shortCommit}"
+                        } else {
+                            tag = "build-${env.BUILD_NUMBER}"
+                        }
+
+                        env.IMAGE_TAG = tag
+                        echo "Branch rilevato: ${branchName}"
+                        echo "Git Tag: ${gitTag ?: 'nessuno'}"
+                        echo "Docker Image Tag: ${env.IMAGE_TAG}"
+                    }
+                }
+            }
+        }
+
+        stage('Copia Dockerfile esterno') {
+            steps {
+                script {
+                    def containerId = sh(script: 'hostname', returnStdout: true).trim()
+                    echo "Container ID agent: ${containerId}"
+                    sh "docker cp /home/vagrant/Dockerfile ${containerId}:/home/jenkins/agent/workspace/app/Track2-Step2-WEB-APP/Dockerfile"
+                    echo "Dockerfile copiato con successo"
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                        sh "docker build -t ${env.DOCKER_IMAGE}:${env.IMAGE_TAG} ."
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'docker-hub', 
+                        usernameVariable: 'DOCKER_USER', 
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
+                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                        sh "docker push ${env.DOCKER_IMAGE}:${env.IMAGE_TAG}"
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker logout || true'
+        }
+    }
+}
