@@ -2,7 +2,6 @@ pipeline {
     agent { label 'jenkins-agent' }
 
     environment {
-        IMAGE_TAG = ''
         DOCKER_IMAGE = 'marcobuccidev/flask-app-example-build'
     }
 
@@ -20,22 +19,33 @@ pipeline {
                         
                         def shortCommit = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
 
+                        def tag
                         if (gitTag) {
-                            env.IMAGE_TAG = gitTag
-                            echo "Build da tag Git: ${gitTag}"
+                            tag = gitTag
                         } else if (branchName == 'main' || branchName == 'master') {
-                            env.IMAGE_TAG = 'latest'
-                            echo "Build da branch master/main: tag 'latest'"
+                            tag = 'latest'
                         } else if (branchName == 'develop') {
-                            env.IMAGE_TAG = "develop-${shortCommit}"
-                            echo "Build da branch develop: tag '${env.IMAGE_TAG}'"
+                            tag = "develop-${shortCommit}"
                         } else {
-                            env.IMAGE_TAG = "build-${env.BUILD_NUMBER}"
-                            echo "Build da branch '${branchName}': tag '${env.IMAGE_TAG}'"
+                            tag = "build-${env.BUILD_NUMBER}"
                         }
 
-                        echo "Docker Image Tag finale: ${env.IMAGE_TAG}"
+                        env.IMAGE_TAG = tag
+                        echo "Branch rilevato: ${branchName}"
+                        echo "Git Tag: ${gitTag ?: 'nessuno'}"
+                        echo "Docker Image Tag: ${env.IMAGE_TAG}"
                     }
+                }
+            }
+        }
+
+        stage('Copia Dockerfile esterno') {
+            steps {
+                script {
+                    def containerId = sh(script: 'hostname', returnStdout: true).trim()
+                    echo "Container ID agent: ${containerId}"
+                    sh "docker cp /home/vagrant/Dockerfile ${containerId}:/home/jenkins/agent/workspace/app/Track2-Step2-WEB-APP/Dockerfile"
+                    echo "Dockerfile copiato con successo"
                 }
             }
         }
@@ -43,9 +53,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    dir('Track2-Step2-WEB-APP') {
                         sh "docker build -t ${env.DOCKER_IMAGE}:${env.IMAGE_TAG} ."
-                    }
                 }
             }
         }
@@ -68,9 +76,7 @@ pipeline {
 
     post {
         always {
-            script {
-                sh 'docker logout || true'
-            }
+            sh 'docker logout || true'
         }
     }
 }

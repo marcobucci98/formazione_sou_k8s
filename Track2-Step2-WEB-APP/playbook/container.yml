@@ -17,7 +17,7 @@
     jenkins_agent_name: "jenkins-agent"
     jenkins_agent_ip: "172.28.0.20"
     jenkins_agent_image: "jenkins/inbound-agent:latest"
-    jenkins_agent_secret: "3c9ee23e050ef4221c741c3bf2bfa3b4a4a0af2dfb196c6e910a5e249b29d74d"
+    jenkins_agent_secret: "8ccfb06ba1974ec83a0c3a9baf958e2707974a26d2863cc81606ef80eeea8ff6"
 
   tasks:
 
@@ -130,7 +130,7 @@
 
     - name: Show Password Admin
       ansible.builtin.debug:
-        msg: "La password iniziale di Jenkins Admin è: {{ jenkins_admin_password.stdout }}"
+        msg: "La password iniziale: {{ jenkins_admin_password.stdout }}"
       when: jenkins_admin_password.rc == 0
 
     # JENKINS AGENT (MODIFICATO PER DOCKER OUT OF DOCKER)
