@@ -1,9 +1,9 @@
 pipeline {
-    agent any
+    agent {'jenkins-agent'}
 
     environment {
-        // Dichiarazione globale per renderla accessibile in tutti gli stage
         IMAGE_TAG = ''
+        DOCKER_IMAGE = 'marcobuccidev/flask-app-example-build'
     }
 
     stages {
@@ -11,10 +11,8 @@ pipeline {
             steps {
                 script {
                     dir('Track2-Step2-WEB-APP') {
-                        // Recupera il tag Git se presente sul commit corrente
                         def gitTag = sh(script: 'git tag --points-at HEAD', returnStdout: true).trim()
                         
-                        // Recupera il nome del branch reale
                         def branchName = env.BRANCH_NAME ?: env.GIT_BRANCH?.replace('origin/', '')
                         if (!branchName) {
                             branchName = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
@@ -22,18 +20,21 @@ pipeline {
                         
                         def shortCommit = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
 
-                        // Logica dinamica di Tagging
                         if (gitTag) {
                             env.IMAGE_TAG = gitTag
+                            echo "Build da tag Git: ${gitTag}"
                         } else if (branchName == 'main' || branchName == 'master') {
                             env.IMAGE_TAG = 'latest'
+                            echo "Build da branch master/main: tag 'latest'"
                         } else if (branchName == 'develop') {
                             env.IMAGE_TAG = "develop-${shortCommit}"
+                            echo "Build da branch develop: tag '${env.IMAGE_TAG}'"
                         } else {
                             env.IMAGE_TAG = "build-${env.BUILD_NUMBER}"
+                            echo "Build da branch '${branchName}': tag '${env.IMAGE_TAG}'"
                         }
 
-                        echo "Tag generato per Docker: ${env.IMAGE_TAG}"
+                        echo "Docker Image Tag finale: ${env.IMAGE_TAG}"
                     }
                 }
             }
@@ -43,7 +44,7 @@ pipeline {
             steps {
                 script {
                     dir('Track2-Step2-WEB-APP') {
-                        sh "docker build -t marcobuccidev/flask-app-example-build:${env.IMAGE_TAG} /home/vagrant"
+                        sh "docker build -t ${env.DOCKER_IMAGE}:${env.IMAGE_TAG} ."
                     }
                 }
             }
@@ -52,13 +53,23 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    dir('Track2-Step2-WEB-APP') {
-                        withCredentials([usernamePassword(credentialsId: 'docker-hub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                            sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
-                            sh "docker push marcobuccidev/flask-app-example-build:${env.IMAGE_TAG}"
-                        }
+                    withCredentials([usernamePassword(
+                        credentialsId: 'docker-hub', 
+                        usernameVariable: 'DOCKER_USER', 
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
+                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                        sh "docker push ${env.DOCKER_IMAGE}:${env.IMAGE_TAG}"
                     }
                 }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                sh 'docker logout || true'
             }
         }
     }
