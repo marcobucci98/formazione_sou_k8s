@@ -22,7 +22,7 @@
   tasks:
 
     # DOCKER SU ROCKY LINUX 
-    - name: Rimozione pacchetti Docker
+    - name: Rimozione pacchetti Docker legacy
       ansible.builtin.dnf:
         name:
           - docker
@@ -43,7 +43,7 @@
           - python3-devel
         state: present
 
-    - name: Rimozione pacchetti RPM 
+    - name: Rimozione pacchetti RPM conflittuali
       ansible.builtin.dnf:
         name:
           - python3-requests
@@ -80,7 +80,7 @@
           - docker-compose-plugin
         state: present
 
-    - name: Avvio Docker
+    - name: Avvio ed abilitazione Docker
       ansible.builtin.systemd:
         name: docker
         state: started
@@ -122,13 +122,15 @@
         cmd: docker exec {{ jenkins_master_name }} cat /var/jenkins_home/secrets/initialAdminPassword
       register: jenkins_admin_password
       changed_when: false
-      retries: 10
-      delay: 5
+      failed_when: false
+      retries: 5
+      delay: 3
       until: jenkins_admin_password.rc == 0
 
     - name: Show Password Admin
       ansible.builtin.debug:
-        msg: "Password: {{ jenkins_admin_password.stdout }}"
+        msg: "La password iniziale di Jenkins Admin è: {{ jenkins_admin_password.stdout }}"
+      when: jenkins_admin_password.rc == 0
 
     # JENKINS AGENT
     - name: Avvio container Jenkins Agent
