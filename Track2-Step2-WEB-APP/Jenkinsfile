@@ -37,13 +37,11 @@ pipeline {
             }
         }
 
-        stage('Copia file dal nodo host') {
+        stage('Copy File ') {
             steps {
                 script {
-                    // Recupera dinamicamente l'ID del container agent corrente
                     def containerId = sh(script: 'hostname', returnStdout: true).trim()
         
-                    // Copia sia il Dockerfile che l'applicazione Python nella workspace
                     sh "docker cp /home/vagrant/Dockerfile ${containerId}:${WORKSPACE}/Dockerfile"
                     sh "docker cp /home/vagrant/app.py ${containerId}:${WORKSPACE}/app.py"
 
@@ -55,7 +53,6 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build dal workspace root dove ora risiedono sia Dockerfile che app.py
                     sh "docker build -t ${env.DOCKER_IMAGE}:${env.IMAGE_TAG} ."
                 }
             }
