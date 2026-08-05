@@ -1,0 +1,81 @@
+pipeline {
+    agent { label 'jenkins-agent' }
+
+    environment {
+        DOCKER_USER  = 'marcobuccidev'
+        IMAGE_NAME   = 'flask-app-example-build'
+        DOCKER_CREDS = 'docker-hub'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Tag') {
+            steps {
+                script {
+                    // Prende lo SHA corto (7 caratteri)
+                    def gitSha = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+                    
+                    // Controlla se il commit attuale ha un tag Git assegnato
+                    def gitTag = sh(script: "git tag --points-at HEAD", returnStdout: true).trim()
+                    
+                    // Recupera il nome del branch corrente
+                    def branchName = env.BRANCH_NAME ?: sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).trim()
+
+                    // Logica di tagging
+                    if (gitTag != '') {
+                        // 1. Uguale al tag Git se "buildata" da tag git
+                        env.IMAGE_TAG = gitTag
+                        echo "Build da Git Tag: ${env.IMAGE_TAG}"
+                    } else if (branchName == 'master' || branchName == 'main') {
+                        // 2. 'latest' se "buildata" da branch master
+                        env.IMAGE_TAG = 'latest'
+                        echo "Build da branch master: tag impostato a ${env.IMAGE_TAG}"
+                    } else if (branchName == 'develop') {
+                        // 3. "develop + SHA commit GIT" se "buildata" da branch develop
+                        env.IMAGE_TAG = "develop-${gitSha}"
+                        echo "Build da branch develop: tag impostato a ${env.IMAGE_TAG}"
+                    } else {
+                        // Fallback per altri branch secondari per evitare che IMAGE_TAG sia null
+                        env.IMAGE_TAG = "${branchName}-${gitSha}"
+                        echo "Build da branch generico (${branchName}): tag impostato a ${env.IMAGE_TAG}"
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    sh "docker build -t ${env.DOCKER_USER}/${env.IMAGE_NAME}:${env.IMAGE_TAG} ."
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDS, usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                        sh "echo \$PASS | docker login -u \$USER --password-stdin"
+                        sh "docker push ${env.DOCKER_USER}/${env.IMAGE_NAME}:${env.IMAGE_TAG}"
+                        sh "docker logout"
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                if (env.IMAGE_TAG) {
+                    sh "docker rmi ${env.DOCKER_USER}/${env.IMAGE_NAME}:${env.IMAGE_TAG} || true"
+                }
+            }
+        }
+    } 
+}
