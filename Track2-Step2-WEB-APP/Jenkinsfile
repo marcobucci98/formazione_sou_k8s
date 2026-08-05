@@ -17,33 +17,22 @@ pipeline {
         stage('Tag') {
             steps {
                 script {
-                    // Prende lo SHA corto (7 caratteri)
                     def gitSha = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
                     
-                    // Controlla se il commit attuale ha un tag Git assegnato
                     def gitTag = sh(script: "git tag --points-at HEAD", returnStdout: true).trim()
                     
-                    // Recupera il nome del branch corrente
                     def branchName = env.BRANCH_NAME ?: sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).trim()
 
-                    // Logica di tagging
                     if (gitTag != '') {
-                        // 1. Uguale al tag Git se "buildata" da tag git
                         env.IMAGE_TAG = gitTag
                         echo "Build da Git Tag: ${env.IMAGE_TAG}"
                     } else if (branchName == 'master' || branchName == 'main') {
-                        // 2. 'latest' se "buildata" da branch master
                         env.IMAGE_TAG = 'latest'
                         echo "Build da branch master: tag impostato a ${env.IMAGE_TAG}"
                     } else if (branchName == 'develop') {
-                        // 3. "develop + SHA commit GIT" se "buildata" da branch develop
                         env.IMAGE_TAG = "develop-${gitSha}"
                         echo "Build da branch develop: tag impostato a ${env.IMAGE_TAG}"
-                    } else {
-                        // Fallback per altri branch secondari per evitare che IMAGE_TAG sia null
-                        env.IMAGE_TAG = "${branchName}-${gitSha}"
-                        echo "Build da branch generico (${branchName}): tag impostato a ${env.IMAGE_TAG}"
-                    }
+                    } 
                 }
             }
         }
