@@ -90,6 +90,8 @@ Viene impostata la cartella di lavoro, installazione di flask necessario per la 
 
 Una volta completata l'esecuzione del Jenkinsfile:
 
+Utilizzare `sudo su -` per accedere come amministratore.
+
 Lanciare il comando `docker run -d -p 5000:5000 --name app-cont marcobuccidev/flask-app-example-build:latest`
 
 Inserire l'indirizzo `http://192.168.56.10:5000` per visualizzare l'app.
