@@ -86,7 +86,11 @@ Il Dockerfile viene strutturato per utilizzare un'immagine **alpine** per suppor
 
 Viene impostata la cartella di lavoro, installazione di flask necessario per la web-app, copia del codice python **app.py** nella cartella di lavoro, esposizione della porta 5000 per la visualizzazione dell'applicazione tramite browser e i comandi necessari all'avviamento.
 
-## VISUALIZZAZIONE DELLA WEB-APP
+## AVVIO
+
+Scaricare la cartella, e spostarsi nella cartella del progetto.
+
+Utilizzare il comando `vagrant up`, il playbook verrà eseguito automaticamente.
 
 Una volta completata l'esecuzione del Jenkinsfile:
 
