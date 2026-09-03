@@ -30,7 +30,7 @@ Esegui questo comando per la creazione del Secret:
    kubectl create secret tls apache-tls-secret --cert=./tls.crt --key=./tls.key -n default
 ```
 
-## PASSO 3 - Helm Chart
+## STEP 3 - Helm Chart
 
 Posizionati nella directory del chart ed esegui:
 
