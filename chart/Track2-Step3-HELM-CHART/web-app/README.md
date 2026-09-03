@@ -12,7 +12,7 @@ Il chart è progettato per l'esposizione tramite **Traefik**.
 
 ## Installazione
 
-Scaricare l'applicazione ed seguire gli step.
+Scaricare e spostarsi nella cartella dell'applicazione ed seguire gli step.
 
 ## STEP 1 - Helm Chart
 
@@ -20,6 +20,20 @@ Posizionati nella directory del chart ed esegui:
 
 ```
    helm install web-app .
+```
+
+Utilizzare i aseguenti comandi per installare le relative immagini:
+
+```
+   helm install web-app ./web-app/ --set image.tag="latest"
+```
+
+```
+   helm install web-app ./web-app/ --set image.tag="develop-c4fc141"
+```
+
+```
+   helm install web-app ./web-app/ --set image.tag="develop-1b855a9"
 ```
 
 ## STEP 2 - DNS
