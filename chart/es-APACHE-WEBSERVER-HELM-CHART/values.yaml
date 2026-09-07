@@ -1,0 +1,30 @@
+# configurazione container
+
+replicaCount: 1 # repliche
+
+image:
+  repository: httpd # repo immagine docker
+  tag: "2.4" # versione
+  pullPolicy: IfNotPresent
+
+# configurazione service
+service:
+  type: ClusterIP
+  port: 80 # porta service
+  targetPort: 80 # porta del container a cui viene inoltrato il traffico
+
+# configurazione ingress controller
+ingress:
+  enabled: true
+  className: "nginx" #nome ingress controller
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  host: "apache.esk8s.com" # nome dominio
+  path: "/"
+  pathType: "Prefix"
+
+# configurazione TLS
+tls:
+  enabled: true
+  secretName: "apache-tls-secret" # nome del secret (da creare)
+  mountPath: "/usr/local/apache2/conf/certs" # lettura dei certificati

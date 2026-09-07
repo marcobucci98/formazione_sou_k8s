@@ -1,0 +1,60 @@
+pipeline {
+    agent { label 'cluster-agent' } 
+
+    environment {
+        REPO_URL = 'https://github.com/marcobucci98/formazione_sou_k8s.git'
+        BRANCH = 'main'
+        CHART_PATH = 'chart/Track2-Step3-HELM-CHART/web-app'
+        NAMESPACE = 'formazione-sou'
+        RELEASE_NAME = 'web-app'
+    }
+
+    stages {
+        stage('Checkout Repository') {
+            steps {
+                echo 'Clonazione del repository GitHub...'
+                git url: "${REPO_URL}", branch: "${BRANCH}"
+            }
+        }
+
+        stage('Prepara Namespace') {
+            steps {
+                echo "Verifica di '${NAMESPACE}...'"
+                sh """
+                    kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
+                """
+            }
+        }
+
+        stage('Deploy Helm') {
+            steps {
+                echo "🚀 Esecuzione di helm upgrade --install nel namespace '${NAMESPACE}'..."
+                sh """
+                    helm upgrade --install ${RELEASE_NAME} ./${CHART_PATH} \\
+                        --namespace ${NAMESPACE} \\
+                        --create-namespace \\
+                        --wait \\
+                        --timeout 5m \\
+                        --debug
+                """
+            }
+        }
+
+        stage('Verifica Deployment') {
+            steps {
+                echo 'Verifica dello stato del deployment e delle risorse...'
+                sh "kubectl get all -n ${NAMESPACE}"
+                sh "helm ls -n ${NAMESPACE}"
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Deploy completato con successo."
+        }
+        failure {
+            echo "Errore durante il deploy."
+        }
+    }
+}

@@ -1,0 +1,34 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/rockylinux-9"
+  config.vm.hostname = "rocky9"
+  config.vm.network "private_network", ip: "192.168.56.10"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.name = "rocky9"
+    vb.memory = "2048"
+    vb.cpus = 2
+  end
+
+  # PERMESSI ROOT
+  config.vm.provision "shell", name: "setup-vagrant-sudo", inline: <<-SHELL
+    echo "vagrant ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/vagrant
+    chmod 0440 /etc/sudoers.d/vagrant
+  SHELL
+
+  # COPIA DEL FILE 
+  config.vm.provision "file", source: "./playbook/container.yml", destination: "/home/vagrant/container.yml"
+
+  # INSTALLAZIONE ANSIBLE 
+  config.vm.provision "shell", name: "install-ansible", inline: <<-SHELL
+    dnf install -y epel-release
+    dnf config-manager --set-enabled crb
+    dnf install -y ansible
+    ansible --version
+  SHELL
+
+  # ESECUZIONE DEL PLAYBOOK
+  config.vm.provision "shell", name: "run-playbook", inline: <<-SHELL
+    echo "Esecuzione playbook..."
+    ansible-playbook /home/vagrant/container.yml
+  SHELL
+end
