@@ -1,0 +1,121 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ printf "%s-apache" .Release.Name }} #nome deployment
+  labels:
+    app: {{ .Release.Name }}-apache #etichette
+spec:
+  replicas: {{ .Values.replicaCount | default 1 }} #repliche
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-apache
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-apache
+    spec:
+      containers:
+      - name: apache # nome container
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}" #immagine e tag
+        imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+        ports:
+        - containerPort: 80 # porta per http del container
+          name: http
+        - containerPort: 443 # porta per https del container
+          name: https
+        volumeMounts:
+        - name: ssl-config # configurazione SSL
+          mountPath: /usr/local/apache2/conf/extra/httpd-ssl.conf
+          subPath: httpd-ssl.conf
+        # certificati dal Secret
+        {{- if .Values.tls.enabled }}
+        - name: tls-certs
+          # mount dei certificati
+          mountPath: {{ .Values.tls.mountPath }}
+          readOnly: true
+        {{- end }}
+      volumes:
+      # volume per la configmap
+      - name: ssl-config
+        configMap:
+          # nome della configmap
+          name: {{ printf "%s-apache-ssl-conf" .Release.Name }}
+      # volume secret
+      {{- if .Values.tls.enabled }}
+      - name: tls-certs
+        secret:
+          # nome del secret
+          secretName: {{ .Values.tls.secretName | default (printf "%s-tls" .Release.Name) }}
+      {{- end }}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ printf "%s-apache-svc" .Release.Name }} # nome service
+  labels:
+    app: {{ .Release.Name }}-apache
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app: {{ .Release.Name }}-apache # etichetta per il collegamento del service al pod 
+  ports:
+  - protocol: TCP
+    port: {{ .Values.service.port }} #porta service 
+    targetPort: {{ .Values.service.targetPort }} # porta bersaglio del pod
+    name: http
+
+---
+
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ printf "%s-ing" .Release.Name }} # nome ingress
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }} # nome classe ingress controller
+  {{- end }}
+  rules:
+  - host: {{ .Values.ingress.host | quote }} # dominio
+    http:
+      paths:
+      - path: {{ .Values.ingress.path }}
+        pathType: {{ .Values.ingress.pathType }}
+        backend:
+          service:
+            name: {{ printf "%s-apache-svc" .Release.Name }} #nome service per inoltro del traffico
+            port:
+              number: {{ .Values.service.port }} # porta service
+{{- end }}
+
+---
+
+{{- if .Values.tls.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s-apache-ssl-conf" .Release.Name }} # nome configmap
+  labels:
+    app: {{ .Release.Name }}-apache
+data:
+  httpd-ssl.conf: |
+    Listen 443
+    <VirtualHost *:443>
+        ServerName {{ .Values.ingress.host }} # dominio
+        SSLEngine on
+        SSLCertificateFile "{{ .Values.tls.mountPath }}/tls.crt" # certificato 
+        SSLCertificateKeyFile "{{ .Values.tls.mountPath }}/tls.key" # chiave
+        DocumentRoot "/usr/local/apache2/htdocs"
+        <Directory "/usr/local/apache2/htdocs">
+            AllowOverride None
+            Require all granted
+        </Directory>
+    </VirtualHost>
+{{- end }}
