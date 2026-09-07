@@ -24,7 +24,7 @@ pipeline {
             }
         }
 
-        stage('Prepara Namespace') {
+        stage('Preparazione Namespace') {
             steps {
                 echo "Verifica del namespace ${NAMESPACE}..."
                 sh """
@@ -35,7 +35,7 @@ pipeline {
 
         stage('Deploy Helm') {
             steps {
-                echo "Esecuzione di helm upgrade --install nel namespace ${NAMESPACE}..."
+                echo "Install nel namespace ${NAMESPACE}..."
                 sh """
                     helm upgrade --install ${RELEASE_NAME} ./${CHART_PATH} \\
                         --namespace ${NAMESPACE} \\
@@ -49,7 +49,7 @@ pipeline {
 
         stage('Verifica Deployment') {
             steps {
-                echo 'Verifica dello stato del deployment e delle risorse...'
+                echo 'Verifica Deployment...'
                 sh "kubectl get all -n ${NAMESPACE}"
                 sh "helm ls -n ${NAMESPACE}"
             }
