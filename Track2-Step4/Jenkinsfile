@@ -17,9 +17,9 @@ pipeline {
             }
         }
 
-        stage('Preparazione Namespace') {
+        stage('Prepara Namespace') {
             steps {
-                echo "Verifica del namespace '${NAMESPACE}'..."
+                echo "Verifica del namespace ${NAMESPACE}..."
                 sh """
                     kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
                 """
@@ -28,7 +28,7 @@ pipeline {
 
         stage('Deploy Helm') {
             steps {
-                echo "Install nel namespace '${NAMESPACE}'..."
+                echo "Esecuzione di helm upgrade --install nel namespace ${NAMESPACE}..."
                 sh """
                     helm upgrade --install ${RELEASE_NAME} ./${CHART_PATH} \\
                         --namespace ${NAMESPACE} \\
