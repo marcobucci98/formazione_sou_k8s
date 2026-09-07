@@ -1,0 +1,76 @@
+pipeline {
+    agent { label 'cluster-agent' } // agent
+
+    environment {
+        REPO_URL = 'https://github.com/marcobucci98/formazione_sou_k8s.git' // URL repository GitHub da clonare
+        BRANCH = 'main' // branch
+        CHART_PATH = 'chart/Track2-Step3-HELM-CHART/web-app' // percorso repository del chart Helm
+        NAMESPACE = 'formazione-sou' // namespace
+        RELEASE_NAME = 'web-app' // release
+    }
+
+    // checkout del codice dal repository
+    stages {
+        stage('Checkout Repository') {
+            steps {
+                echo 'Clonazione del repository GitHub...'
+                git url: "${REPO_URL}", branch: "${BRANCH}"
+            }
+        }
+
+        // verifica della struttura
+        stage('Lint Helm Chart') {
+            steps {
+                echo 'Esecuzione di helm lint...'
+                sh "helm lint ./${CHART_PATH}"
+            }
+        }
+
+        // crea il namespace se non esiste
+        stage('Prepara Namespace') {
+            steps {
+                echo "Verifica di '${NAMESPACE}...'"
+                sh """
+                    kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
+                """
+            }
+        }
+        // installazione/aggiornamento del chart. 
+        // --create-namespace assicura la creazione del namespace se non esiste
+        // --wait attende che tutte le risorse siano pronte prima di considerare lo step completato
+        // --debug attiva l'output di Helm
+        // --timeout 5m imposta un tempo massimo di attesa per il completamento
+        stage('Deploy Helm') {
+            steps {
+                echo "Install nel namespace '${NAMESPACE}'..."
+                sh """
+                    helm upgrade --install ${RELEASE_NAME} ./${CHART_PATH} \\
+                        --namespace ${NAMESPACE} \\
+                        --create-namespace \\
+                        --wait \\
+                        --timeout 5m \\
+                        --debug
+                """
+            }
+        }
+
+        // Mostra lo stato delle risorse 
+
+        stage('Verifica Deployment') {
+            steps {
+                echo 'Verifica dello stato del deployment e delle risorse...'
+                sh "kubectl get all -n ${NAMESPACE}"
+                sh "helm ls -n ${NAMESPACE}"
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Deploy completato con successo."
+        }
+        failure {
+            echo "Errore durante il deploy."
+        }
+    }
+}
