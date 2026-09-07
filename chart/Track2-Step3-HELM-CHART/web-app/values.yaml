@@ -1,0 +1,11 @@
+replicaCount: 1
+
+appname: web-app-deployment
+
+labels:
+  app: "web-app"
+
+image:
+  repository: marcobuccidev/flask-app-example-build
+  tag: "latest"
+  pullPolicy: Always
