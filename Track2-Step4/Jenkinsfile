@@ -28,7 +28,7 @@ pipeline {
 
         stage('Deploy Helm') {
             steps {
-                echo "🚀 Esecuzione di helm upgrade --install nel namespace '${NAMESPACE}'..."
+                echo "Esecuzione di helm upgrade --install nel namespace '${NAMESPACE}'..."
                 sh """
                     helm upgrade --install ${RELEASE_NAME} ./${CHART_PATH} \\
                         --namespace ${NAMESPACE} \\
