@@ -1,9 +1,9 @@
-## Track 2 - Step 4 - Installazione Chart con Jenkins
+# Track 2 - Step 4 - Installazione Chart con Jenkins
 
 L'esercizio prevede di configurare il cluster Kubernetes, con Jenkins, in modo tale che raggiunga il namespace "formazione-sou", e poi, scrivere una pipeline che installi il chart riposto sulla propria repository GitHub, sviluppato nello Step 3, ed effettui l'installazione sul namespace "formazione-sou".
 
 ---
-# Preparazione ed Esecuzione 
+## Preparazione ed Esecuzione 
 
 Avviare Jenkins e creare l'agent ```cluster-agent```.
 
