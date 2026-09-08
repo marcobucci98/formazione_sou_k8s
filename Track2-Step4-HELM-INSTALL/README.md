@@ -15,7 +15,7 @@ URL Repository: ```https://github.com/marcobucci98/formazione_sou_k8s.git```
 
 Ramo: ```main``` 
 
-Script Path: ```Track2-Step4/Jenkinsfile```
+Script Path: ```Track2-Step4-HELM-INSTALL/Jenkinsfile```
 
 Per avviare il cluster.```minikube start -p nome_cluster```
 
