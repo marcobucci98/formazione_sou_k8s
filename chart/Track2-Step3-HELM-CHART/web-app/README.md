@@ -67,12 +67,6 @@ Per recuperare l'IP assegnato:
 kubectl get svc -n traefik
 ```
 
-oppure recuperare l'ingress creato dal chart: 
-
-```
-kubectl get svc -n traefik
-```
-
 Nella colonna **EXTERNAL-IP** copiare l'IP associato a **traefik**.
 
 Eseguire:
