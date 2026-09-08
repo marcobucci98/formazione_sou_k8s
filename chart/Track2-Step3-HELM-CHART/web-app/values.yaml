@@ -1,0 +1,44 @@
+# deployment
+appname: web-app-deployment
+replicaCount: 1
+labels:
+  app: "web-app"
+image:
+  repository: marcobuccidev/flask-app-example-build
+  tag: "latest"
+  pullPolicy: Always
+name: web-app
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+probes:
+  readiness:
+    path: /
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+  liveness:
+    path: /
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+
+# service
+service:
+  name: web-app-service
+  type: ClusterIP
+  protocol: TCP
+  port: 80
+  targetPort: 5000
+
+# ingress
+ingress:
+  name: web-app-ingress
+  className: traefik
+  host: formazionesou.local
+  path: /
+  pathType: Prefix
