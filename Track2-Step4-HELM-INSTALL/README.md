@@ -19,9 +19,9 @@ Script Path: ```Track2-Step4/Jenkinsfile```
 
 Per avviare il cluster.```minikube start -p nome_cluster```
 
-Successivamente avviare la pipeline e installare Traefik (vedi Step 3), e lanciare il comando ```minikube tunnel -p nome_cluster``` in nuovo terminale e lasciarlo in esecuzione.
+Successivamente avviare la pipeline e installare Traefik (vedi Step 3), e lanciare il comando ```minikube tunnel -p nome_cluster``` in un nuovo terminale e lasciarlo in esecuzione.
 
-Recuperare l'indirizzo ip: ```kubectl get ingress -n formazione-sou``` e applicarlo al file ```/etc/hosts``` con ```sudo vim /etc/hosts``` -- ```indirizzo_ip formazionesou.local```.
+Recuperare l'indirizzo ip: ```kubectl get ingress -n formazione-sou``` e applicarlo al file ```/etc/hosts``` con ```sudo vim /etc/hosts``` --> ```indirizzo_ip formazionesou.local```.
 
 Aprire il browser e andare all'indirizzo ```formazionesou.local```.
 
