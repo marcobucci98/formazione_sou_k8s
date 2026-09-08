@@ -8,9 +8,13 @@ L'esercizio prevede di configurare il cluster Kubernetes, con Jenkins, in modo t
 Avviare Jenkins e creare l'agent ```cluster-agent```.
 
 Impostare la pipeline seguendo queste indicazioni:
+
 Definition: ```Pipeline script from SCM``` 
+
 URL Repository: ```https://github.com/marcobucci98/formazione_sou_k8s.git```
+
 Ramo: ```main``` 
+
 Script Path: ```Track2-Step4/Jenkinsfile```
 
 Per avviare il cluster.```minikube start -p nome_cluster```
