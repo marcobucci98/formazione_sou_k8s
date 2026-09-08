@@ -27,7 +27,7 @@ pipeline {
         }
 
         // crea il namespace se non esiste
-        stage('Prepara Namespace') {
+        stage('Preparazione Namespace') {
             steps {
                 echo "Verifica di '${NAMESPACE}...'"
                 sh """
