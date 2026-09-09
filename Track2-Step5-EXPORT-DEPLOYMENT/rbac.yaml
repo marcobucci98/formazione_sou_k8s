@@ -1,0 +1,33 @@
+apiVersion: v1 # versione API
+kind: ServiceAccount # tipo di risorsa
+metadata: # metadati della risorsa
+  name: web-app-service-account # nome service account
+  namespace: formazione-sou # namespace di riferimento
+---
+apiVersion: rbac.authorization.k8s.io/v1 #versione API
+kind: Role # tipo di risorsa
+metadata: # metadati della risorsa
+  name: web-app-role # nome role
+  namespace: formazione-sou # namespace di riferimento
+rules: # permessi e regole del role 
+  - apiGroups: # gruppo api della risorsa
+      - apps
+    resources: # indica a che tipo di risorse applicare i limiti
+      - deployments # limite per il deployment
+    verbs: # operazioni consentite
+      - get # leggere i dettagli di uno specifico deployment
+      - list # elenca i deployment presenti nel namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1 # versione API
+kind: RoleBinding # tipo di risorsa
+metadata: # metadati della risorsa
+  name: web-app-role-binding # nome risorsa
+  namespace: formazione-sou # namespace 
+subjects: # elenco di chi riceve i permessi
+  - kind: ServiceAccount # definisce a chi assegnare i ruoli
+    name: web-app-service-account # service account a cui concedere i permessi
+    namespace: formazione-sou # namespace del service account destinatario
+roleRef: # specifica role 
+  apiGroup: rbac.authorization.k8s.io # gruppo api
+  kind: Role # tipo di ruolo referenziato
+  name: web-app-role # role da associare
