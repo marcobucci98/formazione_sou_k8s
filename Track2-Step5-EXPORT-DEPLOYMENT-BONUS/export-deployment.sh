@@ -28,43 +28,52 @@ apply_rbac() {
 }
 
 export_and_validate() {
+    # rimuove il file export se già creato
+    rm -f "$EXPORT_FILE" 2>/dev/null || true
+
     # token temporaneo per il service account
     TOKEN=$(kubectl create token "$SERVICE_ACCOUNT" -n "$NAMESPACE")
-
     API_SERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
 
-    # export del deployment con curl
+
     if curl -sfk \
         -H "Authorization: Bearer $TOKEN" \
         -H "Accept: application/yaml" \
-        "$API_SERVER/apis/apps/v1/namespaces/$NAMESPACE/deployments/$DEPLOYMENT" \
-        -o "$EXPORT_FILE"; then
+        "$API_SERVER/apis/apps/v1/namespaces/$NAMESPACE/deployments/$DEPLOYMENT" | \
+        yq eval 'del(.metadata.managedFields)' - > "$EXPORT_FILE"; then
         echo "Export eseguito con successo!"
     else
         echo "Errore, export non riuscito!"
         exit 2
     fi
 
+    # verifica del file 
+    if [[ ! -r "$EXPORT_FILE" ]]; then
+        echo "Errore critico: il file $EXPORT_FILE non è leggibile."
+        echo "Verifica i permessi con: ls -l $EXPORT_FILE"
+        exit 2
+    fi
+
     # verifica di readinessProbe
-    if ! grep "readinessProbe" "$EXPORT_FILE" > /dev/null 2>&1; then
+    if ! yq eval '.spec.template.spec.containers[].readinessProbe' "$EXPORT_FILE" | grep -qv "^null$"; then
         echo "Errore, non è presente la readinessProbe!"
         exit 3
     fi
 
     # verifica di livenessProbe
-    if ! grep "livenessProbe" "$EXPORT_FILE" > /dev/null 2>&1; then
+    if ! yq eval '.spec.template.spec.containers[].livenessProbe' "$EXPORT_FILE" | grep -qv "^null$"; then
         echo "Errore, non è presente la livenessProbe!"
         exit 4
     fi
 
     # verifica dei limits
-    if ! grep "limits" "$EXPORT_FILE" > /dev/null 2>&1; then
+    if ! yq eval '.spec.template.spec.containers[].resources.limits' "$EXPORT_FILE" | grep -qv "^null$"; then
         echo "Errore, non sono presenti i limits!"
         exit 5
     fi
 
     # verifica delle requests
-    if ! grep "requests" "$EXPORT_FILE" > /dev/null 2>&1; then
+    if ! yq eval '.spec.template.spec.containers[].resources.requests' "$EXPORT_FILE" | grep -qv "^null$"; then
         echo "Errore, non sono presenti i requests!"
         exit 6
     fi
@@ -72,6 +81,6 @@ export_and_validate() {
     echo "Tutti i parametri sono presenti!"
 }
 
-# funzioni
+# esecuzione funzioni 
 apply_rbac "$RBAC_FILE"
 export_and_validate
